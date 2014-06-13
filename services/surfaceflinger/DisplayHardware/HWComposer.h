@@ -33,6 +33,10 @@
 #include <utils/Vector.h>
 
 #define MAX_LAYER_COUNT 32
+#ifdef MTK_MT6589
+#include "Transform.h"
+struct hwc_color;
+#endif
 
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
                            const struct timespec *request,
@@ -185,6 +189,17 @@ public:
         virtual void setAcquireFenceFd(int fenceFd) = 0;
         virtual void setPlaneAlpha(uint8_t alpha) = 0;
         virtual void onDisplayed() = 0;
+
+#ifdef MTK_MT6589
+        virtual int getMva() = 0;
+        virtual void setLayerType(uint32_t type) = 0;
+        virtual void setSecure(bool secure) = 0;
+        virtual void setDirty(bool dirty) = 0;
+        virtual void setConnectedApi(int32_t api) = 0;
+        virtual void setIdentity(int32_t id) = 0;
+        virtual void setFillColor(struct hwc_color color) = 0;
+        virtual void setMatrix(const Transform& tr) = 0;
+#endif
     };
 
     /*
