@@ -916,6 +916,7 @@ sp<Fence> HWComposer::getAndResetReleaseFence(int32_t id) {
 status_t HWComposer::commit() {
     int err = NO_ERROR;
     if (mHwc) {
+#ifdef OLD_HWC_API
         if (hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_0)) {
             if (!hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_1)) {
                 // On version 1.0, the OpenGL ES target surface is communicated
@@ -924,15 +925,23 @@ status_t HWComposer::commit() {
                 mLists[0]->dpy = eglGetCurrentDisplay();
                 mLists[0]->sur = eglGetCurrentSurface(EGL_DRAW);
             }
-            for (size_t i=VIRTUAL_DISPLAY_ID_BASE; i<mNumDisplays; i++) {
-                DisplayData& disp(mDisplayData[i]);
-                if (disp.outbufHandle) {
-                    mLists[i]->outbuf = disp.outbufHandle;
-                    mLists[i]->outbufAcquireFenceFd =
+#else
+        if (!hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_1)) {
+            // On version 1.0, the OpenGL ES target surface is communicated
+            // by the (dpy, sur) fields and we are guaranteed to have only
+            // a single display.
+            mLists[0]->dpy = eglGetCurrentDisplay();
+            mLists[0]->sur = eglGetCurrentSurface(EGL_DRAW);
+#endif
+        }
+
+        for (size_t i=VIRTUAL_DISPLAY_ID_BASE; i<mNumDisplays; i++) {
+            DisplayData& disp(mDisplayData[i]);
+            if (disp.outbufHandle) {
+                mLists[i]->outbuf = disp.outbufHandle;
+                mLists[i]->outbufAcquireFenceFd =
                         disp.outbufAcquireFence->dup();
-                }
             }
-            err = mHwc->set(mHwc, mNumDisplays, mLists);
         }
 #ifdef MTK_MT6589
 	    for (size_t i=0 ; i<mNumDisplays ; i++) {
@@ -950,12 +959,15 @@ status_t HWComposer::commit() {
             err = hwcSet(mHwc, eglGetCurrentDisplay(), eglGetCurrentSurface(EGL_DRAW), mNumDisplays,
                     const_cast<hwc_display_contents_1_t**>(mLists));
         }
-
+#else
+        err = mHwc->set(mHwc, mNumDisplays, mLists);
+#endif
         for (size_t i=0 ; i<mNumDisplays ; i++) {
             DisplayData& disp(mDisplayData[i]);
             disp.lastDisplayFence = disp.lastRetireFence;
             disp.lastRetireFence = Fence::NO_FENCE;
             if (disp.list) {
+#ifdef OLD_HWC_API
                 if (hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_0)) {
                     if (disp.list->retireFenceFd != -1) {
                         disp.lastRetireFence = new Fence(disp.list->retireFenceFd);
@@ -963,7 +975,6 @@ status_t HWComposer::commit() {
                     }
                 }
                 hwcFlags(mHwc, disp.list) &= ~HWC_GEOMETRY_CHANGED;
-
 #else
                 if (disp.list->retireFenceFd != -1) {
                     disp.lastRetireFence = new Fence(disp.list->retireFenceFd);
@@ -981,6 +992,7 @@ status_t HWComposer::commit() {
     }
     return (status_t)err;
 }
+
 
 status_t HWComposer::release(int disp) {
     LOG_FATAL_IF(disp >= VIRTUAL_DISPLAY_ID_BASE);

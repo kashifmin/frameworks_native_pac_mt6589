@@ -17,6 +17,7 @@
 #ifndef ANDROID_LAYER_H
 #define ANDROID_LAYER_H
 
+
 #include <stdint.h>
 #include <sys/types.h>
 
@@ -305,6 +306,7 @@ public:
 #ifdef QCOM_BSP
     //GPUTileRect : Return true if the layer has been updated in this frame.
     bool hasNewFrame() const;
+#endif
 #ifdef MTK_MT6589
     bool mBufferDirty;
     mutable uint64_t mBufferRefCount;

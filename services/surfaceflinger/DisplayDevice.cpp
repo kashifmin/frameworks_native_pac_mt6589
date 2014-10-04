@@ -138,9 +138,6 @@ DisplayDevice::DisplayDevice(
     // initialize the display orientation transform.
     setProjection(panelOrientation, mViewport, mFrame);
 
-#else
-    setProjection(DisplayState::eOrientationDefault, mViewport, mFrame);
-#endif
 #ifdef MTK_MT6589
     mLayersSwapRequired = false;
 #endif

@@ -91,7 +91,6 @@ Layer::Layer(SurfaceFlinger* flinger, const sp<Client>& client,
         mHasSurface(false),
         mClientRef(client),
         mTransformHint(0)
-        mClientRef(client)
 #ifdef MTK_MT6589
 	, mIdentity(uint32_t(android_atomic_inc(&sIdentity)))
 #endif
